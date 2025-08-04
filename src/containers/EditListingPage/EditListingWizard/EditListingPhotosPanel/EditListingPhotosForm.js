@@ -33,17 +33,6 @@ const ImageUploadError = props => {
   ) : null;
 };
 
-// NOTE: PublishListingError and ShowListingsError are here since Photos panel is the last visible panel
-// before creating a new listing. If that order is changed, these should be changed too.
-// Create and show listing errors are shown above submit button
-const PublishListingError = props => {
-  return props.error ? (
-    <p className={css.error}>
-      <FormattedMessage id="EditListingPhotosForm.publishListingFailed" />
-    </p>
-  ) : null;
-};
-
 const ShowListingsError = props => {
   return props.error ? (
     <p className={css.error}>
@@ -121,8 +110,7 @@ const FieldListingImage = props => {
  * @param {boolean} props.updated - Whether the form is updated
  * @param {boolean} props.updateInProgress - Whether the update is in progress
  * @param {Object} props.fetchErrors - The fetch errors object
- * @param {propTypes.error} props.fetchErrors.publishListingError - The publish listing error
- * @param {propTypes.error} props.fetchErrors.showListingsError - The show listings error
+* @param {propTypes.error} props.fetchErrors.showListingsError - The show listings error
  * @param {propTypes.error} props.fetchErrors.uploadImageError - The upload image error
  * @param {propTypes.error} props.fetchErrors.updateListingError - The update listing error
  * @param {string} props.saveActionMsg - The save action message
@@ -181,8 +169,7 @@ export const EditListingPhotosForm = props => {
         const images = values.images || [];
         const { aspectWidth = 1, aspectHeight = 1, variantPrefix } = listingImageConfig;
 
-        const { publishListingError, showListingsError, updateListingError, uploadImageError } =
-          fetchErrors || {};
+        const { showListingsError, updateListingError, uploadImageError } = fetchErrors || {};
         const uploadOverLimit = isUploadImageOverLimitError(uploadImageError);
 
         // imgs can contain added images (with temp ids) and submitted images with uniq ids.
@@ -278,7 +265,6 @@ export const EditListingPhotosForm = props => {
               <FormattedMessage id="EditListingPhotosForm.addImagesTip" />
             </p>
 
-            <PublishListingError error={publishListingError} />
             <ShowListingsError error={showListingsError} />
 
             <Button

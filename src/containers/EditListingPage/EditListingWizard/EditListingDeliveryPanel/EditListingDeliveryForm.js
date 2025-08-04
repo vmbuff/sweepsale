@@ -48,6 +48,7 @@ const identity = v => v;
  * @param {Object} props.fetchErrors - The fetch errors
  * @param {propTypes.error} [props.fetchErrors.showListingsError] - The show listings error
  * @param {propTypes.error} [props.fetchErrors.updateListingError] - The update listing error
+ * @param {propTypes.error} [props.fetchErrors.publishListingError] - The publish listing error
  * @param {boolean} props.autoFocus - Whether the form is auto focused
  * @returns {JSX.Element} The EditListingDeliveryForm component
  */
@@ -107,7 +108,7 @@ export const EditListingDeliveryForm = props => (
         id: 'EditListingDeliveryForm.optionalText',
       });
 
-      const { updateListingError, showListingsError } = fetchErrors || {};
+      const { updateListingError, showListingsError, publishListingError } = fetchErrors || {};
 
       const classes = classNames(css.root, className);
       const submitReady = (updated && pristine) || ready;
@@ -140,6 +141,12 @@ export const EditListingDeliveryForm = props => (
             value="pickup"
           />
           <div className={pickupClasses}>
+            {publishListingError ? (
+              <p className={css.error}>
+                <FormattedMessage id="EditListingDeliveryForm.publishListingFailed" />
+              </p>
+            ) : null}
+
             {updateListingError ? (
               <p className={css.error}>
                 <FormattedMessage id="EditListingDeliveryForm.updateFailed" />

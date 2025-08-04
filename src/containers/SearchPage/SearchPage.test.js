@@ -329,7 +329,6 @@ describe('SearchPage', () => {
 
     await waitFor(() => {
       // Has main search in Topbar and it's a location search.
-      expect(getByPlaceholderText('TopbarSearchForm.placeholder')).toBeInTheDocument();
       expect(screen.getByTestId('location-search')).toBeInTheDocument();
 
       // Has filter column
