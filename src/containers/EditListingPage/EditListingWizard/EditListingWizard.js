@@ -664,7 +664,7 @@ class EditListingWizard extends Component {
           navRootClassName={css.nav}
           tabRootClassName={css.tab}
         >
-          {tabs.map(tab => {
+          {tabs.map((tab, index) => {
             const tabTranslations = tabLabelAndSubmit(
               intl,
               tab,
@@ -672,13 +672,27 @@ class EditListingWizard extends Component {
               isPriceDisabled,
               processName
             );
+
+            // Ensure the first Photos tab in new listing flow offers a "Next" action
+            const isFirst = index === 0;
+            const isLast = index === tabs.length - 1;
+            const processNameString = isNewListingFlow ? `${processName}.` : '';
+            const newOrEdit = isNewListingFlow ? 'new' : 'edit';
+            const firstStepSubmit = intl.formatMessage({
+              id: `EditListingWizard.${processNameString}${newOrEdit}.savePhotos`,
+            });
+            const submitButtonText =
+              isFirst && !isLast && tab === PHOTOS
+                ? firstStepSubmit
+                : tabTranslations.submitButton;
+
             return (
               <EditListingWizardTab
                 {...rest}
                 key={tab}
                 tabId={`${id}_${tab}`}
                 tabLabel={tabTranslations.label}
-                tabSubmitButtonText={tabTranslations.submitButton}
+                tabSubmitButtonText={submitButtonText}
                 tabLinkProps={tabLink(tab)}
                 selected={selectedTab === tab}
                 disabled={isNewListingFlow && !tabsStatus[tab]}
