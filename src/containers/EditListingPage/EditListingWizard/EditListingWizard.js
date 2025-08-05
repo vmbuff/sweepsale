@@ -66,12 +66,12 @@ import css from './EditListingWizard.module.css';
 // Note 1: You need to change save button translations for new listing flow
 // Note 2: Ensure that draft listing is created after the first panel
 //         and listing publishing happens after last panel.
-// Note 3: The first tab creates a draft listing and title is mandatory attribute for it.
-//         Details tab asks for "title" and is therefore the first tab in the wizard flow.
-const TABS_DETAILS_ONLY = [DETAILS];
-const TABS_PRODUCT = [DETAILS, PRICING_AND_STOCK, DELIVERY, PHOTOS, STYLE];
-const TABS_BOOKING = [DETAILS, LOCATION, PRICING, AVAILABILITY, PHOTOS, STYLE];
-const TABS_INQUIRY = [DETAILS, LOCATION, PRICING, PHOTOS, STYLE];
+// Note 3: The first tab creates a draft listing.
+//         If the first step changes, ensure mandatory data is handled accordingly.
+const TABS_PHOTOS_AND_DETAILS = [PHOTOS, DETAILS];
+const TABS_PRODUCT = [PHOTOS, DETAILS, PRICING_AND_STOCK, DELIVERY, STYLE];
+const TABS_BOOKING = [PHOTOS, DETAILS, LOCATION, PRICING, AVAILABILITY, STYLE];
+const TABS_INQUIRY = [PHOTOS, DETAILS, LOCATION, PRICING, STYLE];
 const TABS_ALL = [...TABS_PRODUCT, ...TABS_BOOKING, ...TABS_INQUIRY];
 
 // Tabs are horizontal in small screens
@@ -542,7 +542,7 @@ class EditListingWizard extends Component {
     // For oudated draft listing, we don't show other tabs but the "details"
     const tabs =
       isNewListingFlow && (invalidExistingListingType || !hasListingTypeSelected)
-        ? TABS_DETAILS_ONLY
+        ? TABS_PHOTOS_AND_DETAILS
         : isBookingProcess(processName)
         ? tabsForBookingProcess(TABS_BOOKING, listingTypeConfig)
         : isPurchaseProcess(processName)
@@ -664,7 +664,7 @@ class EditListingWizard extends Component {
           navRootClassName={css.nav}
           tabRootClassName={css.tab}
         >
-          {tabs.map(tab => {
+          {tabs.map((tab, index) => {
             const tabTranslations = tabLabelAndSubmit(
               intl,
               tab,
@@ -672,13 +672,27 @@ class EditListingWizard extends Component {
               isPriceDisabled,
               processName
             );
+
+            // Ensure the first Photos tab in new listing flow offers a "Next" action
+            const isFirst = index === 0;
+            const isLast = index === tabs.length - 1;
+            const processNameString = isNewListingFlow ? `${processName}.` : '';
+            const newOrEdit = isNewListingFlow ? 'new' : 'edit';
+            const firstStepSubmit = intl.formatMessage({
+              id: `EditListingWizard.${processNameString}${newOrEdit}.savePhotos`,
+            });
+            const submitButtonText =
+              isFirst && !isLast && tab === PHOTOS
+                ? firstStepSubmit
+                : tabTranslations.submitButton;
+
             return (
               <EditListingWizardTab
                 {...rest}
                 key={tab}
                 tabId={`${id}_${tab}`}
                 tabLabel={tabTranslations.label}
-                tabSubmitButtonText={tabTranslations.submitButton}
+                tabSubmitButtonText={submitButtonText}
                 tabLinkProps={tabLink(tab)}
                 selected={selectedTab === tab}
                 disabled={isNewListingFlow && !tabsStatus[tab]}

@@ -15,7 +15,7 @@ const createListingLinkConfigMaybe = (intl, showLink) =>
           type: 'internal',
           route: {
             name: 'EditListingPage',
-            params: { slug: 'draft', id: draftId, type: 'new', tab: 'details' },
+            params: { slug: 'draft', id: draftId, type: 'new', tab: 'photos' },
           },
           highlight: true,
         },

@@ -7,7 +7,13 @@ import {
   LISTING_PAGE_PARAM_TYPE_EDIT,
   LISTING_PAGE_PARAM_TYPE_NEW,
 } from '../../util/urlHelpers';
-import { createCurrentUser, createStock, createOwnListing, fakeIntl } from '../../util/testData';
+import {
+  createCurrentUser,
+  createStock,
+  createOwnListing,
+  createImage,
+  fakeIntl,
+} from '../../util/testData';
 import {
   renderWithProviders as render,
   testingLibrary,
@@ -25,6 +31,7 @@ import {
   PRICING,
   PRICING_AND_STOCK,
 } from './EditListingWizard/EditListingWizardTab';
+import { LISTING_STATE_DRAFT } from '../../util/types';
 
 const { screen, userEvent, waitFor, within } = testingLibrary;
 
@@ -305,26 +312,53 @@ describe('EditListingPage', () => {
     currentUser: createCurrentUser('id-of-me-myself'),
   };
 
-  // Test for new listing flow with categories
-  it('Purchase: new listing flow with categories', async () => {
-    // add category configuration, define above
+  it('Purchase: new listing flow starts on photos tab', async () => {
     const config = getConfig(listingTypesPurchase, listingFieldsPurchase, categoryConfig);
     const routeConfiguration = getRouteConfiguration(config.layout);
 
-    // Set up props for the component
     const props = {
       ...commonProps,
       params: {
         id: '00000000-0000-0000-0000-000000000000',
         slug: 'slug',
         type: LISTING_PAGE_PARAM_TYPE_NEW,
-        tab: DETAILS,
+        tab: PHOTOS,
       },
     };
 
-    // Render the EditListingPage component with provided props and configurations
-    const { getByText, queryAllByText, getByRole, getByLabelText, queryAllByRole } = render(
-      <EditListingPage {...props} />,
+    const { getByText } = render(<EditListingPage {...props} />, {
+      initialState: initialState(),
+      config,
+      routeConfiguration,
+    });
+
+    await waitFor(() => {
+      expect(getByText('EditListingWizard.tabLabelPhotos')).toBeInTheDocument();
+      expect(getByText('EditListingPhotosPanel.createListingTitle')).toBeInTheDocument();
+      expect(
+        getByText('EditListingWizard.default-purchase.new.savePhotos')
+      ).toBeInTheDocument();
+    });
+  });
+
+  // Test for new listing flow with categories
+  it('Purchase: new listing flow with categories', async () => {
+    // add category configuration, define above
+    const config = getConfig(listingTypesPurchase, listingFieldsPurchase, categoryConfig);
+    const routeConfiguration = getRouteConfiguration(config.layout);
+
+    const propsPhotos = {
+      ...commonProps,
+      params: {
+        id: '00000000-0000-0000-0000-000000000000',
+        slug: 'slug',
+        type: LISTING_PAGE_PARAM_TYPE_NEW,
+        tab: PHOTOS,
+      },
+    };
+
+    const { getByText: getByTextPhotos, unmount } = render(
+      <EditListingPage {...propsPhotos} />,
       {
         initialState: initialState(),
         config,
@@ -333,11 +367,50 @@ describe('EditListingPage', () => {
     );
 
     await waitFor(() => {
-      // Navigation to tab
+      expect(getByTextPhotos('EditListingWizard.tabLabelPhotos')).toBeInTheDocument();
+    });
+
+    unmount();
+
+    const image = createImage('tempImage');
+    const listing = createOwnListing(
+      'listing-draft',
+      {
+        state: LISTING_STATE_DRAFT,
+        publicData: {
+          listingType: 'sell-bicycles',
+          transactionProcessAlias: 'default-purchase/release-1',
+          unitType: 'item',
+        },
+      },
+      { images: [image] }
+    );
+
+    const propsDetails = {
+      ...commonProps,
+      params: {
+        id: listing.id.uuid,
+        slug: 'slug',
+        type: LISTING_PAGE_PARAM_TYPE_NEW,
+        tab: DETAILS,
+      },
+    };
+
+    const {
+      getByText,
+      queryAllByText,
+      getByRole,
+      getByLabelText,
+      queryAllByRole,
+    } = render(<EditListingPage {...propsDetails} />, {
+      initialState: initialState(listing),
+      config,
+      routeConfiguration,
+    });
+
+    await waitFor(() => {
       const tabLabel = 'EditListingWizard.tabLabelDetails';
       expect(getByText(tabLabel)).toBeInTheDocument();
-
-      // Tab: panel title
       expect(getByText('EditListingDetailsPanel.createListingTitle')).toBeInTheDocument();
     });
 
@@ -389,19 +462,18 @@ describe('EditListingPage', () => {
     const config = getConfig(listingTypesPurchase, listingFieldsPurchase);
     const routeConfiguration = getRouteConfiguration(config.layout);
 
-    const props = {
+    const propsPhotos = {
       ...commonProps,
       params: {
         id: '00000000-0000-0000-0000-000000000000',
         slug: 'slug',
         type: LISTING_PAGE_PARAM_TYPE_NEW,
-        tab: DETAILS,
+        tab: PHOTOS,
       },
     };
 
-    // Render the EditListingPage component with provided props and configurations
-    const { getByText, getByRole, getByLabelText, queryAllByRole } = render(
-      <EditListingPage {...props} />,
+    const { getByText: getByTextPhotos, unmount } = render(
+      <EditListingPage {...propsPhotos} />,
       {
         initialState: initialState(),
         config,
@@ -410,25 +482,57 @@ describe('EditListingPage', () => {
     );
 
     await waitFor(() => {
-      // Navigation to tab
+      expect(getByTextPhotos('EditListingWizard.tabLabelPhotos')).toBeInTheDocument();
+    });
+
+    unmount();
+
+    const image = createImage('tempImage');
+    const listing = createOwnListing(
+      'listing-draft',
+      {
+        state: LISTING_STATE_DRAFT,
+        publicData: {
+          listingType: 'sell-bicycles',
+          transactionProcessAlias: 'default-purchase/release-1',
+          unitType: 'item',
+        },
+      },
+      { images: [image] }
+    );
+
+    const propsDetails = {
+      ...commonProps,
+      params: {
+        id: listing.id.uuid,
+        slug: 'slug',
+        type: LISTING_PAGE_PARAM_TYPE_NEW,
+        tab: DETAILS,
+      },
+    };
+
+    const { getByText, getByRole, getByLabelText, queryAllByRole } = render(
+      <EditListingPage {...propsDetails} />,
+      {
+        initialState: initialState(listing),
+        config,
+        routeConfiguration,
+      }
+    );
+
+    await waitFor(() => {
       const tabLabel = 'EditListingWizard.tabLabelDetails';
       expect(getByText(tabLabel)).toBeInTheDocument();
-
-      // Tab: panel title
       expect(getByText('EditListingDetailsPanel.createListingTitle')).toBeInTheDocument();
       expect(getByRole('textbox', { name: 'EditListingDetailsForm.title' })).toBeInTheDocument();
-      // Check description exists
       expect(
         getByRole('textbox', { name: 'EditListingDetailsForm.description' })
       ).toBeInTheDocument();
       expect(getByLabelText('Cat')).toBeInTheDocument();
-      // Check custom extended data field exists
       expect(
         getByRole('option', { name: 'CustomExtendedDataField.placeholderSingleSelect' }).selected
       ).toBe(true);
-      // Check there is no selection
       expect(getByRole('option', { name: 'Cat 1' }).selected).toBe(false);
-      // Check the submit button exists
       expect(
         getByRole('button', { name: 'EditListingWizard.default-purchase.new.saveDetails' })
       ).toBeInTheDocument();
@@ -516,18 +620,18 @@ describe('EditListingPage', () => {
     );
     const routeConfiguration = getRouteConfiguration(config.layout);
 
-    const props = {
+    const propsPhotos = {
       ...commonProps,
       params: {
         id: '00000000-0000-0000-0000-000000000000',
         slug: 'slug',
         type: LISTING_PAGE_PARAM_TYPE_NEW,
-        tab: DETAILS,
+        tab: PHOTOS,
       },
     };
 
-    const { getByText, getByRole, getByLabelText, queryAllByRole } = render(
-      <EditListingPage {...props} />,
+    const { getByText: getByTextPhotos, unmount } = render(
+      <EditListingPage {...propsPhotos} />,
       {
         initialState: initialState(),
         config,
@@ -535,15 +639,49 @@ describe('EditListingPage', () => {
       }
     );
     await waitFor(() => {
-      // Navigation to tab
+      expect(getByTextPhotos('EditListingWizard.tabLabelPhotos')).toBeInTheDocument();
+    });
+
+    unmount();
+
+    const image = createImage('tempImage');
+    const listing = createOwnListing(
+      'listing-draft',
+      {
+        state: LISTING_STATE_DRAFT,
+        publicData: {
+          listingType: 'sell-bicycles',
+          transactionProcessAlias: 'default-purchase/release-1',
+          unitType: 'item',
+        },
+      },
+      { images: [image] }
+    );
+
+    const propsDetails = {
+      ...commonProps,
+      params: {
+        id: listing.id.uuid,
+        slug: 'slug',
+        type: LISTING_PAGE_PARAM_TYPE_NEW,
+        tab: DETAILS,
+      },
+    };
+
+    const { getByText, getByRole, getByLabelText, queryAllByRole } = render(
+      <EditListingPage {...propsDetails} />,
+      {
+        initialState: initialState(listing),
+        config,
+        routeConfiguration,
+      }
+    );
+    await waitFor(() => {
       const tabLabel = 'EditListingWizard.tabLabelDetails';
       expect(getByText(tabLabel)).toBeInTheDocument();
-
-      // Tab: panel title
       expect(getByText('EditListingDetailsPanel.createListingTitle')).toBeInTheDocument();
     });
 
-    // Simulate user interaction and select parent level category
     await waitFor(() => {
       userEvent.selectOptions(
         screen.getByRole('combobox'),
@@ -558,18 +696,14 @@ describe('EditListingPage', () => {
 
     await waitFor(() => {
       expect(getByRole('textbox', { name: 'EditListingDetailsForm.title' })).toBeInTheDocument();
-
       expect(
         getByRole('textbox', { name: 'EditListingDetailsForm.description' })
       ).toBeInTheDocument();
       expect(getByLabelText('Cat')).toBeInTheDocument();
-
       expect(
         getByRole('option', { name: 'CustomExtendedDataField.placeholderSingleSelect' }).selected
       ).toBe(true);
-
       expect(getByRole('option', { name: 'Cat 1' }).selected).toBe(false);
-
       expect(
         getByRole('button', { name: 'EditListingWizard.default-purchase.new.saveDetails' })
       ).toBeInTheDocument();
@@ -2624,7 +2758,7 @@ describe('EditListingPageComponent', () => {
   it('Check that there is correct wizard tabs', async () => {
     render(
       <EditListingPageComponent
-        params={{ id: 'id', slug: 'slug', type: 'new', tab: 'details' }}
+        params={{ id: 'id', slug: 'slug', type: 'new', tab: 'photos' }}
         isAuthenticated={false}
         authInProgress={false}
         fetchInProgress={false}
@@ -2663,33 +2797,24 @@ describe('EditListingPageComponent', () => {
       />
     );
 
+    const tabLabelPhotos = 'EditListingWizard.tabLabelPhotos';
+    expect(screen.getByText(tabLabelPhotos)).toBeInTheDocument();
+
     const tabLabelDetails = 'EditListingWizard.tabLabelDetails';
     expect(screen.getByText(tabLabelDetails)).toBeInTheDocument();
 
-    // Check that default photos panel is not shown initially (it's added after listing type is selected)
-    const tabLabelPhotos = 'EditListingWizard.tabLabelPhotos';
-    expect(screen.queryByText(tabLabelPhotos)).not.toBeInTheDocument();
+    // Check that other panels are not shown initially (they are added after listing type is selected)
+    const tabLabelPricingAndStock = 'EditListingWizard.tabLabelPricingAndStock';
+    expect(screen.queryByText(tabLabelPricingAndStock)).not.toBeInTheDocument();
+    const tabLabelDelivery = 'EditListingWizard.tabLabelDelivery';
+    expect(screen.queryByText(tabLabelDelivery)).not.toBeInTheDocument();
 
-    await act(async () => {
-      userEvent.selectOptions(
-        screen.getByLabelText('EditListingDetailsForm.listingTypeLabel'),
-        'product-selling'
-      );
-    });
-
-    // Tabs not in use
+    // Tabs not yet active or added
     const tabLabelLocation = 'EditListingWizard.tabLabelLocation';
     expect(screen.queryByText(tabLabelLocation)).not.toBeInTheDocument();
     const tabLabelPricing = 'EditListingWizard.tabLabelPricing';
     expect(screen.queryByText(tabLabelPricing)).not.toBeInTheDocument();
     const tabLabelAvailability = 'EditListingWizard.tabLabelAvailability';
     expect(screen.queryByText(tabLabelAvailability)).not.toBeInTheDocument();
-
-    // Tabs added
-    const tabLabelPricingAndStock = 'EditListingWizard.tabLabelPricingAndStock';
-    expect(screen.getByText(tabLabelPricingAndStock)).toBeInTheDocument();
-    const tabLabelDelivery = 'EditListingWizard.tabLabelDelivery';
-    expect(screen.getByText(tabLabelDelivery)).toBeInTheDocument();
-    expect(screen.getByText(tabLabelPhotos)).toBeInTheDocument();
   });
 });
